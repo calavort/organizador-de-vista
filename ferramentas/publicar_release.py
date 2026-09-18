@@ -119,7 +119,7 @@ def publish_package(root: Path, archive: Path, create_repository=False, notes=""
         "draft": True, "prerelease": False, "target_commitish": repo["default_branch"],
         "body": "Pacote portatil do Organizador de Vista para Windows (Python 3.11+, PySide6 e Tekla Structures).\n\n"
                 "Na primeira instalacao, extraia o ZIP e execute Instalar dependencias.bat. "
-                "Abra por Iniciar Organizador de Vista.bat. As proximas versoes sao verificadas ao abrir o programa.\n\n"
+                "Abra por Abrir Organizador de Vista.bat. As proximas versoes sao verificadas ao abrir o programa.\n\n"
                 "Relatorios, o config.json e o tekla-root.txt nao fazem parte deste pacote: "
                 "sao seus e nao sao tocados pela atualizacao."
                 + ("\n\n" + notes if notes else ""),

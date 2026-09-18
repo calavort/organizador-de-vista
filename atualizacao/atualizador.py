@@ -45,8 +45,8 @@ _SEGMENT = re.compile(r"[A-Za-z0-9_][A-Za-z0-9 ._-]*")
 APP_FILES = (
     "Organizador de Vista.py", "versao.json", "requirements.txt",
     "interface_organizador_tekla.html",
-    "Abrir Organizador de Vista.bat", "Iniciar Organizador de Vista.bat",
-    "Instalar dependencias.bat", "Adicionar ao Menu Iniciar.bat",
+    "Abrir Organizador de Vista.bat", "Instalar dependencias.bat",
+    "Adicionar ao Menu Iniciar.bat",
     "atualizacao/atualizador.py", "atualizacao/atualizador_ui.py",
     "ferramentas/publicar_release.py",
     "interface/organizador_de_vista.ico",

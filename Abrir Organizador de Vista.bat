@@ -1,12 +1,9 @@
 @echo off
-setlocal
+REM Abre o Organizador de Vista sem a janela preta (console).
 cd /d "%~dp0"
-
-py -3 "%~dp0Organizador de Vista.py"
-if errorlevel 1 (
-    echo.
-    echo Tentando abrir com python...
-    python "%~dp0Organizador de Vista.py"
+where pyw >nul 2>nul
+if %errorlevel%==0 (
+  start "" pyw "%~dp0Organizador de Vista.py"
+) else (
+  start "" pythonw "%~dp0Organizador de Vista.py"
 )
-
-pause

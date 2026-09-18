@@ -1,5 +1,14 @@
 # Atualizações do Organizador de Vista
 
+## v3.25.2
+
+- Um único atalho para abrir: o `Abrir Organizador de Vista.bat`, agora sem a
+  janela preta do console. O `Iniciar Organizador de Vista.bat` era repetição e
+  foi removido — a atualização apaga ele sozinha de quem já tinha os dois.
+- A guia **Atualização** não cabia na faixa e aparecia com o nome cortado.
+- Guia mais limpa: saíram a nota explicativa e o crédito repetido (o rodapé do
+  programa já assina).
+
 ## v3.25.1
 
 - O instalador agora espera o programa fechar de verdade antes de trocar os
@@ -15,14 +24,11 @@
   Enquanto uma operação do Tekla estiver rodando, a instalação espera.
 - **Seus arquivos não são tocados pela atualização.** O `config.json`, o
   `tekla-root.txt` e a pasta `relatorios` ficam de fora do pacote de propósito.
-- **Novo modo de abertura, igual ao do Super Captura.** O
-  `Iniciar Organizador de Vista.bat` abre o programa sem a janela preta do
-  console. O `Adicionar ao Menu Iniciar.bat` cria o atalho no Menu Iniciar, com
-  ícone próprio, apontando direto para o `pyw.exe`.
+- **Novo modo de abertura, igual ao do Super Captura.** O programa abre sem a
+  janela preta do console, e o `Adicionar ao Menu Iniciar.bat` cria o atalho no
+  Menu Iniciar, com ícone próprio, apontando direto para o `pyw.exe`.
 - **Ícone próprio**, desenhado a partir do logo que já estava no cabeçalho do
   programa. Aparece na barra de tarefas, na janela e no Menu Iniciar.
-- O `Abrir Organizador de Vista.bat` continua existindo, agora só para quando
-  você quiser ver os logs e erros no console.
 
 ## v3.24 e anteriores
 
