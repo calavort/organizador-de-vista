@@ -1,5 +1,18 @@
 # Atualizações do Organizador de Vista
 
+## v3.26.1
+
+- **Abrir o programa não interrompe mais o trabalho.** A verificação de
+  atualização continua acontecendo sozinha ao abrir, mas agora ela só deixa a
+  guia Atualização pronta, sem abrir nada na frente. Quando quiser, você vai lá
+  e clica em Atualizar.
+- A única exceção: se a mesma versão nova ficar **mais de 7 dias** sem ser
+  instalada, aí sim o programa avisa na abertura. Versão mais nova reinicia a
+  contagem.
+- **Organizar, Otimizar e Desfazer passaram para dentro do cartão do Plano de
+  Organização**, separados do resultado por uma linha fina. O cartão termina
+  exatamente na mesma altura da barra lateral.
+
 ## v3.26.0
 
 - **O Registro de Atividades saiu da tela.** A tabela do Plano de Organização

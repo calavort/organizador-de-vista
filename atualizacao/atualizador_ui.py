@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import tempfile
 import threading
+import time
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QTimer, Signal, Slot
@@ -101,6 +102,37 @@ class UpdateController(QObject):
                 pass
         QTimer.singleShot(1800, lambda: self.check(False))
 
+    # Quantos dias uma versao nova pode ficar so na guia antes do programa
+    # insistir sozinho.
+    DIAS_ATE_INSISTIR = 7
+
+    def _esperando_ha_muito(self, versao):
+        """Ha mais de uma semana com esta versao nova disponivel e sem instalar?
+
+        A data em que a versao apareceu pela primeira vez fica guardada em
+        .atualizacoes/. Versao nova reinicia a contagem: o que conta e ha
+        quanto tempo o usuario esta adiando ESTA atualizacao.
+        """
+        registro = state_path(self.root) / "aviso-versao.json"
+        agora = time.time()
+        try:
+            dados = json.loads(registro.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            dados = {}
+        if dados.get("version") != versao:
+            dados = {"version": versao, "first_seen": agora}
+            try:
+                registro.write_text(json.dumps(dados), encoding="utf-8")
+            except OSError:
+                pass
+            return False
+        try:
+            visto = float(dados.get("first_seen") or agora)
+        except (TypeError, ValueError):
+            return False
+        # Diferenca negativa (relogio mudado para tras) nao dispara o aviso.
+        return (agora - visto) >= self.DIAS_ATE_INSISTIR * 86400
+
     def check(self, manual=True):
         if self.busy or self.installing:
             return
@@ -167,7 +199,10 @@ class UpdateController(QObject):
             self._status(f"Versao {value.version} disponivel." if value else "Voce esta na versao mais recente.")
             if self.manual:
                 self._log(self.message)
-            if value:
+            # A verificacao da abertura nao interrompe o trabalho: ela so deixa
+            # a guia Atualizacao pronta. So insiste quando a versao nova ja
+            # esta parada ha mais de uma semana.
+            if value and (self.manual or self._esperando_ha_muito(value.version)):
                 self.offer_install()
         else:
             self.archive = value

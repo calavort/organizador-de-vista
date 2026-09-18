@@ -665,8 +665,7 @@
 
   .plan-section {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 6px;
+    grid-template-rows: minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
   }
@@ -680,11 +679,16 @@
   }
 
   /* Ações principais vinculadas diretamente ao Plano de Organização. */
+  /* Os botões moram dentro do cartão do Plano de Organização, separados do
+     resultado por uma linha fina - a mesma que divide o cabeçalho do cartão. */
   .plan-actions-wrap {
     flex: none;
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-surface);
   }
 
   .plan-actions {
@@ -1566,9 +1570,7 @@
                 </table>
             </div>
 
-          </div>
-
-          <div class="plan-actions-wrap">
+            <div class="plan-actions-wrap">
             <div class="plan-actions" aria-label="Ações do Plano de Organização">
               <button class="btn-hero btn-primary" id="organizeBtn" type="button">
                 <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
@@ -1583,6 +1585,8 @@
                 Desfazer
               </button>
             </div>
+            </div>
+
           </div>
 
           </div>
