@@ -1,5 +1,17 @@
 # Atualizações do Organizador de Vista
 
+## v3.27.0
+
+- **Acabou o flash da janela preta ao abrir.** O programa agora é o
+  **`Organizador de Vista.pyw`** — dois cliques nele e pronto. Arquivo `.pyw`
+  abre direto no `pyw.exe` do Python, que não tem console nenhum.
+- O flash vinha do `.bat`: todo arquivo `.bat` abre uma janela do `cmd` por um
+  instante, mesmo quando o comando dentro dele não mostra nada. Por isso o
+  `Abrir Organizador de Vista.bat` foi removido — a atualização apaga ele
+  sozinha de quem já tinha.
+- O `Adicionar ao Menu Iniciar.bat` continua, apontando para o `.pyw`. Use ele
+  uma vez e depois abra pelo Menu Iniciar, com ícone e tudo.
+
 ## v3.26.1
 
 - **Abrir o programa não interrompe mais o trabalho.** A verificação de
