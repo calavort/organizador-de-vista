@@ -1,5 +1,20 @@
 # Atualizações do Organizador de Vista
 
+## v3.26.0
+
+- **O Registro de Atividades saiu da tela.** A tabela do Plano de Organização
+  ocupa agora a altura toda da janela.
+- **No lugar dele, notificação no centro da janela**, no estilo do programa:
+  uma por operação, com o resultado em uma frase direta. Verde para concluído,
+  amarelo para atenção, vermelho para falha.
+- **Nada mais falha em silêncio.** Antes, se algo desse errado, a mensagem ia
+  só para aquele registro no rodapé — e a caixa de aviso da interface estava
+  desativada por um `display: none`, então alertas não apareciam em lugar
+  nenhum. Agora toda falha e todo aviso abrem a notificação.
+- **As linhas do processo continuam disponíveis** dentro da notificação, em
+  "Detalhes técnicos", fechado. Quem só quer o resultado lê a frase e fecha;
+  quem precisa investigar abre.
+
 ## v3.25.3
 
 - **Tabela do Plano de Organização com as colunas redistribuídas.** Posição,

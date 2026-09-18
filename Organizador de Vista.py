@@ -6023,6 +6023,34 @@ class App(tk.Tk):
             messagebox.showerror(APP_NAME, str(ex))
 
 
+def montar_notificacao(payload, linhas, alerta=""):
+    """Transforma o fim de uma operacao na notificacao que a tela exibe.
+
+    Uma operacao, uma notificacao. O texto curto e o resultado; as linhas que
+    a operacao produziu no caminho vao junto como detalhe, para o caso de algo
+    ter dado errado e precisar ser investigado. E o que substituiu o registro
+    de atividades: sem isso, uma falha passaria despercebida.
+    """
+    if not isinstance(payload, dict):
+        return payload
+    mensagem = str(payload.get("message") or "").strip()
+    alerta = str(alerta or "").strip()
+    if payload.get("ok"):
+        if alerta:
+            tipo, titulo = "warning", "Atencao"
+            mensagem = (mensagem + "\n\n" + alerta).strip() if mensagem else alerta
+        elif mensagem:
+            tipo, titulo = "success", "Concluido"
+        else:
+            return payload  # operacao muda: nao tem o que dizer
+    else:
+        tipo, titulo = "error", "Nao foi possivel concluir"
+        mensagem = mensagem or "A operacao nao foi concluida."
+    payload["notice"] = {"kind": tipo, "title": titulo, "message": mensagem,
+                         "details": list(linhas or [])}
+    return payload
+
+
 class HtmlController:
     def __init__(self):
         self.cfg = Config.load()
@@ -6141,14 +6169,17 @@ class HtmlController:
         }
 
     def state_payload(self, message="", ok=True, confirm_request=None):
+        # "notice" e preenchido pelo QtBridge ao fim da operacao: e a
+        # notificacao que a janela mostra no lugar do antigo registro de
+        # atividades. As linhas do processo continuam sendo guardadas em
+        # self.logs e viajam dentro da notificacao, como detalhe.
         return {
             "ok": bool(ok),
             "message": message or "",
             "config": self.config_payload(),
             "items": [self.item_payload(item) for item in self.items],
             "sheet_plan": list(self.sheet_plan_rows),
-            "logs": list(self.logs),
-            "alert": self.alert,
+            "notice": None,
             "can_undo": bool(self.undo_states or self.divider_undo_state),
             "confirm_request": confirm_request,
         }
@@ -6195,9 +6226,10 @@ class HtmlController:
     def get_state(self):
         return self.state_payload()
 
-    def clear_log(self):
-        self.logs = []
-        return self.state_payload()
+    def take_alert(self):
+        """Devolve e zera o alerta pendente, para virar aviso na notificacao."""
+        texto, self.alert = self.alert, ""
+        return texto
 
     def set_topmost(self, value):
         self.cfg.topmost = bool(value)
@@ -7180,11 +7212,18 @@ def run_html_app():
             except Exception:
                 pass
 
+        def _com_notificacao(self, payload, inicio):
+            if not isinstance(payload, dict) or payload.get("confirm_request"):
+                return payload  # a tela ja vai abrir a pergunta; nao empilha duas
+            return montar_notificacao(payload, self.controller.logs[inicio:],
+                                      self.controller.take_alert())
+
         def run_task(self, fn):
             """Executa fn na thread Tekla mantendo a interface responsiva."""
             if self._task_running:
                 return self.controller.state_payload(message="Aguarde a operacao atual terminar.", ok=False)
             self._task_running = True
+            inicio = len(self.controller.logs)
             try:
                 self.controller.reset_progress()
                 box = {}
@@ -7201,8 +7240,9 @@ def run_html_app():
                     self.controller.log("Falha na operacao: " + str(box["error"]))
                     if box.get("trace"):
                         self.controller.log(str(box["trace"]))
-                    return self.controller.state_payload(message=str(box["error"]), ok=False)
-                return box.get("result")
+                    return self._com_notificacao(
+                        self.controller.state_payload(message=str(box["error"]), ok=False), inicio)
+                return self._com_notificacao(box.get("result"), inicio)
             finally:
                 self._task_running = False
 
@@ -7226,10 +7266,6 @@ def run_html_app():
             # Nao passa por run_task: roda direto na thread do Qt e responde na
             # hora, mesmo com uma operacao em andamento na thread Tekla.
             return self._result(self.controller.get_progress())
-
-        @Slot(result=str)
-        def clear_log(self):
-            return self._result(self.controller.clear_log())
 
         @Slot(bool, result=str)
         def set_topmost(self, value):

@@ -656,7 +656,7 @@
   /* Lado Direito */
   .right-stack {
     display: grid;
-    grid-template-rows: minmax(0, 1fr) 120px;
+    grid-template-rows: minmax(0, 1fr);
     gap: 16px;
     min-width: 0;
     min-height: 0;
@@ -871,7 +871,7 @@
 
   .table-container,
   .sheet-plan,
-  .log-body,
+  .dialog-details,
   .settings {
     scrollbar-width: thin;
     scrollbar-color: #8a8886 #f3f2f1;
@@ -879,7 +879,7 @@
 
   .table-container::-webkit-scrollbar,
   .sheet-plan::-webkit-scrollbar,
-  .log-body::-webkit-scrollbar,
+  .dialog-details::-webkit-scrollbar,
   .settings::-webkit-scrollbar {
     width: 11px;
     height: 11px;
@@ -887,14 +887,14 @@
 
   .table-container::-webkit-scrollbar-track,
   .sheet-plan::-webkit-scrollbar-track,
-  .log-body::-webkit-scrollbar-track,
+  .dialog-details::-webkit-scrollbar-track,
   .settings::-webkit-scrollbar-track {
     background: #f3f2f1;
   }
 
   .table-container::-webkit-scrollbar-thumb,
   .sheet-plan::-webkit-scrollbar-thumb,
-  .log-body::-webkit-scrollbar-thumb,
+  .dialog-details::-webkit-scrollbar-thumb,
   .settings::-webkit-scrollbar-thumb {
     min-height: 76px;
     background: #8a8886;
@@ -904,7 +904,7 @@
 
   .table-container::-webkit-scrollbar-thumb:hover,
   .sheet-plan::-webkit-scrollbar-thumb:hover,
-  .log-body::-webkit-scrollbar-thumb:hover,
+  .dialog-details::-webkit-scrollbar-thumb:hover,
   .settings::-webkit-scrollbar-thumb:hover {
     background: #605e5c;
   }
@@ -945,52 +945,6 @@
   }
 
   tbody tr.empty td { color: var(--text-disabled); }
-
-  /* Log do Sistema */
-  .log-card {
-    height: 120px;
-    min-height: 0;
-    margin-top: 0;
-  }
-
-  .log-head {
-    padding: 8px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border-light);
-  }
-
-  .log-head strong {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .clean {
-    height: 24px;
-    padding: 0 8px;
-    font-size: 11px;
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--brand);
-    font-weight: 600;
-    flex: none;
-  }
-
-  .clean:hover { background: var(--bg-surface-hover); border-color: var(--border-light); }
-
-  .log-body {
-    flex: 1;
-    padding: 8px 16px;
-    font-family: 'Consolas', 'Courier New', monospace;
-    font-size: 11px;
-    color: var(--text-primary);
-    line-height: 1.6;
-    overflow-y: auto;
-    scrollbar-gutter: stable;
-    background: #faf9f8;
-  }
 
   .time { color: var(--text-secondary); margin-right: 8px; }
 
@@ -1037,8 +991,7 @@
     flex: none;
   }
 
-  .pin,
-  .clean {
+  .pin {
     flex: none;
   }
 
@@ -1091,10 +1044,6 @@
     padding: 7px 8px;
   }
 
-  .log-card {
-    height: 120px;
-  }
-
   .footer {
     margin-top: 0;
     line-height: 1;
@@ -1112,24 +1061,6 @@
     color: var(--text-disabled);
     border-color: var(--border-light);
     cursor: not-allowed;
-  }
-
-  .alert {
-    display: none;
-    border: 1px solid var(--border-brand);
-    border-radius: var(--radius-control);
-    background: #eff6fc;
-    color: #004578;
-    padding: 8px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.35;
-  }
-
-  .alert.show { display: none; }
-
-  .log-body {
-    white-space: pre-wrap;
   }
 
   .busy {
@@ -1259,9 +1190,43 @@
     font-size: 18px;
   }
 
-  .dialog-icon.warn {
-    color: #ffffff;
-    background: var(--brand);
+  /* Cada tipo de notificação tem a sua cor: dá para saber o que aconteceu
+     antes de ler o texto. */
+  .dialog-icon.warn { background: var(--accent); color: #3b2f00; }
+  .dialog-icon.ok { background: #107c10; }
+  .dialog-icon.err { background: #a4262c; }
+
+  /* Detalhes técnicos: o que antes ficava no registro de atividades, agora
+     guardado aqui, fechado, para quando algo precisa ser investigado. */
+  .dialog-detail {
+    border-top: 1px solid var(--border-light);
+    padding-top: 10px;
+  }
+
+  .dialog-detail > summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brand);
+    list-style: none;
+  }
+
+  .dialog-detail > summary::-webkit-details-marker { display: none; }
+  .dialog-detail > summary::before { content: "▸ "; }
+  .dialog-detail[open] > summary::before { content: "▾ "; }
+
+  .dialog-details {
+    margin-top: 8px;
+    max-height: 190px;
+    overflow-y: auto;
+    padding: 8px 10px;
+    background: #faf9f8;
+    border-radius: var(--radius-control);
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    white-space: pre-wrap;
   }
 
   .dialog-title {
@@ -1622,17 +1587,6 @@
 
           </div>
 
-          <div class="alert" id="alertBox"></div>
-
-          <!-- Log -->
-          <div class="panel log-card">
-            <div class="log-head">
-              <strong>Registro de Atividades</strong>
-              <button class="clean" id="clearLogBtn" type="button">Limpar log</button>
-            </div>
-            <div class="log-body" id="logBox"></div>
-          </div>
-
         </section>
       </div>
 
@@ -1658,6 +1612,10 @@
           <h2 class="dialog-title" id="dialogTitle">Aviso</h2>
         </div>
         <p class="dialog-message" id="dialogMessage"></p>
+        <details class="dialog-detail" id="dialogDetail" hidden>
+          <summary>Detalhes técnicos</summary>
+          <div class="dialog-details" id="dialogDetails"></div>
+        </details>
         <div class="dialog-actions" id="dialogActions"></div>
       </div>
     </div>
@@ -1677,15 +1635,15 @@
   <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
   <script>
     const pinBtn = document.getElementById('pinBtn');
-    const logBox = document.getElementById('logBox');
     const tableBody = document.getElementById('tableBody');
     const sheetPlan = document.getElementById('sheetPlan');
-    const alertBox = document.getElementById('alertBox');
     const dialogOverlay = document.getElementById('dialogOverlay');
     const dialogTitle = document.getElementById('dialogTitle');
     const dialogMessage = document.getElementById('dialogMessage');
     const dialogActions = document.getElementById('dialogActions');
     const dialogIcon = document.getElementById('dialogIcon');
+    const dialogDetail = document.getElementById('dialogDetail');
+    const dialogDetails = document.getElementById('dialogDetails');
     const loadingText = document.getElementById('loadingText');
     const loadingPercent = document.getElementById('loadingPercent');
     const loadingFill = document.getElementById('loadingFill');
@@ -1766,7 +1724,6 @@
         api:{
           get_state:() => callBridge('get_state'),
           get_progress:() => callBridge('get_progress'),
-          clear_log:() => callBridge('clear_log'),
           set_topmost:value => callBridge('set_topmost', !!value),
           analyze:payload => callBridge('analyze', payloadText(payload)),
           capacity:payload => callBridge('capacity', payloadText(payload)),
@@ -1968,23 +1925,11 @@
       });
     }
 
-    function renderLog(lines){
-      logBox.textContent = (lines || []).join('\n');
-      logBox.scrollTop = logBox.scrollHeight;
-    }
-
-    function renderAlert(text){
-      alertBox.textContent = '';
-      alertBox.classList.remove('show');
-    }
-
     function applyState(state){
       if(!state) return;
       writeConfig(state.config);
       renderSheetPlan(state.sheet_plan);
       renderRows(state.items);
-      renderLog(state.logs);
-      renderAlert(state.alert);
       const undoBtn = document.getElementById('undoBtn');
       undoBtn.classList.toggle('disabled', !state.can_undo);
       undoBtn.classList.toggle('btn-disabled', !state.can_undo);
@@ -2054,13 +1999,28 @@
       }, 240);
     }
 
+    /* Símbolo e cor de cada tipo de notificação. */
+    const DIALOG_KINDS = {
+      info:    {icone:'i', classe:''},
+      success: {icone:'✓', classe:'ok'},
+      warning: {icone:'!', classe:'warn'},
+      error:   {icone:'✕', classe:'err'}
+    };
+
     function showDialog(options = {}){
       return new Promise(resolve => {
         const buttons = options.buttons || [{label:'OK', value:true, className:'primary'}];
+        const tipo = DIALOG_KINDS[options.kind] || DIALOG_KINDS.info;
         dialogTitle.textContent = options.title || 'Aviso';
         dialogMessage.textContent = options.message || '';
-        dialogIcon.textContent = options.iconText || (options.kind === 'warning' ? '!' : 'i');
-        dialogIcon.classList.toggle('warn', options.kind === 'warning');
+        dialogIcon.textContent = options.iconText || tipo.icone;
+        dialogIcon.className = 'dialog-icon' + (tipo.classe ? ' ' + tipo.classe : '');
+        /* Os detalhes vêm fechados: quem só quer o resultado lê a frase e
+           fecha; quem precisa investigar abre. */
+        const temDetalhes = Array.isArray(options.details) && options.details.length > 0;
+        dialogDetail.hidden = !temDetalhes;
+        dialogDetail.open = false;
+        dialogDetails.textContent = temDetalhes ? options.details.join('\n') : '';
         dialogActions.innerHTML = '';
         buttons.forEach(buttonInfo => {
           const button = document.createElement('button');
@@ -2087,6 +2047,20 @@
         title,
         message,
         kind,
+        buttons:[{label:'OK', value:true, className:'primary'}]
+      });
+    }
+
+    /* Notificação que o Python monta ao fim de cada operação: é ela que
+       substituiu o registro de atividades. Sem ela, uma falha passaria
+       despercebida. */
+    function showNotice(notice){
+      if(!notice || !notice.message) return Promise.resolve(true);
+      return showDialog({
+        title: notice.title || 'Aviso',
+        message: notice.message,
+        kind: notice.kind || 'info',
+        details: notice.details,
         buttons:[{label:'OK', value:true, className:'primary'}]
       });
     }
@@ -2129,10 +2103,10 @@
           await handleConfirmRequest(method, options, result.confirm_request);
           return;
         }
-        // Retornos normais da API ficam no plano/log da interface.
+        await showNotice(result?.notice);
       }catch(err){
         setBusy(false);
-        await showMessage(String(err), 'Erro', 'warning');
+        await showMessage(String(err), 'Não foi possível concluir', 'error');
       }finally{
         setBusy(false);
       }
@@ -2147,7 +2121,6 @@
     document.getElementById('centerLinesBtn').addEventListener('click', () => callApi('center_lines'));
     document.getElementById('divideBtn').addEventListener('click', () => callApi('divide'));
     document.getElementById('undoBtn').addEventListener('click', () => callApi('undo', {confirm:'Desfazer a última alteração desta sessão?'}));
-    document.getElementById('clearLogBtn').addEventListener('click', async () => applyState(await window.pywebview.api.clear_log()));
     inputs().forEach(input => {
       input.addEventListener('keydown', async event => {
         if(event.key !== 'Enter') return;
