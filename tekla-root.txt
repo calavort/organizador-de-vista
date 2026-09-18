@@ -1,0 +1,9 @@
+# Opcional.
+# Se o programa não encontrar o Tekla automaticamente, escreva abaixo a pasta da versão instalada.
+# Use apenas uma linha sem #.
+#
+# Exemplos:
+# C:\Program Files\Tekla Structures\2025.0
+# C:\Program Files\Tekla Structures\2026.0
+# C:\TeklaStructures\2025.0
+# D:\TeklaStructures\2026.0

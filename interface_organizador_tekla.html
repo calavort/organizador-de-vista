@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Organizador de Vista - Tekla</title>
+<style>
+  :root {
+    /* Cores padrão Office/Microsoft Fluent UI */
+    --brand: #0078d4;
+    --brand-hover: #106ebe;
+    --brand-pressed: #005a9e;
+    --accent: #ffb900;
+    --accent-hover: #f3aa00;
+
+    --bg-page: #f3f2f1;
+    --bg-window: #ffffff;
+    --bg-surface: #ffffff;
+    --bg-surface-hover: #f3f2f1;
+    --bg-surface-pressed: #edebe9;
+
+    --text-primary: #323130;
+    --text-secondary: #605e5c;
+    --text-disabled: #a19f9d;
+    --text-on-brand: #ffffff;
+
+    --border-light: #edebe9;
+    --border-default: #d2d0ce;
+    --border-strong: #8a8886;
+    --border-brand: #cce3f5;
+
+    --shadow-window: 0 6.4px 14.4px 0 rgba(0,0,0,0.132), 0 1.2px 3.6px 0 rgba(0,0,0,0.108);
+    --shadow-card: 0 1.6px 3.6px 0 rgba(0,0,0,0.132), 0 0.3px 0.9px 0 rgba(0,0,0,0.108);
+
+    --radius-window: 4px;
+    --radius-control: 4px;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg-page);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    color: var(--text-primary);
+  }
+
+  /* Janela Principal */
+  .window {
+    width: 760px;
+    background: var(--bg-window);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-window);
+    box-shadow: var(--shadow-window);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Barra de Título */
+  .titlebar {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0 0 16px;
+    background: var(--bg-window);
+    border-bottom: 1px solid var(--border-light);
+    user-select: none;
+  }
+
+  .titlebar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .appmark {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand);
+  }
+
+  .appmark svg { width: 14px; height: 14px; fill: currentColor; }
+
+  .title-text {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  /* Controles da Janela */
+  .window-controls {
+    display: flex;
+    height: 100%;
+  }
+
+  .win-btn {
+    width: 46px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-primary);
+    cursor: default;
+    transition: background 0.1s;
+  }
+
+  .win-btn:hover { background-color: var(--bg-surface-hover); }
+
+  .win-btn.close-btn:hover {
+    background-color: #e81123;
+    color: #ffffff;
+  }
+
+  .win-btn svg { width: 10px; height: 10px; }
+
+  /* Corpo da Aplicação */
+  .shell {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background-color: var(--bg-page);
+  }
+
+  /* Cabeçalho Principal */
+  .hero {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-control);
+    padding: 12px 16px;
+    padding-right: 48px;
+    box-shadow: var(--shadow-card);
+    position: relative;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-icon svg { width: 32px; height: 32px; }
+
+  .hero h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .hero span {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    display: block;
+  }
+
+  .pin {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand);
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.1s;
+  }
+
+  .pin:hover { background: var(--bg-surface-hover); color: var(--brand-hover); }
+  .pin:active { background: var(--bg-surface-pressed); }
+  .pin svg { transform: rotate(45deg); width: 14px; height: 14px; }
+
+  /* Layout Dividido */
+  .workspace {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 16px;
+  }
+
+  /* Painéis Brancos */
+  .panel {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-control);
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-card);
+  }
+
+  .panel-head {
+    padding: 12px 16px 8px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+  }
+
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Guias laterais — Office/Fluent */
+  .sidebar-panel {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .sidebar-tabs {
+    height: 38px;
+    padding: 0 12px;
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+    flex: none;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-surface);
+  }
+
+  .sidebar-tab {
+    position: relative;
+    flex: 0 0 auto;
+    min-width: 0;
+    height: 38px;
+    padding: 0 3px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: none;
+    outline: none;
+  }
+
+  .sidebar-tab::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    bottom: -1px;
+    height: 2px;
+    background: transparent;
+  }
+
+  .sidebar-tab:hover {
+    color: var(--text-primary);
+    background: transparent;
+  }
+
+  .sidebar-tab:focus-visible {
+    outline: 1px solid var(--brand);
+    outline-offset: -3px;
+  }
+
+  .sidebar-tab.active {
+    color: var(--brand);
+  }
+
+  .sidebar-tab.active::after {
+    background: var(--brand);
+  }
+
+  .tab-panel {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .tab-panel.active {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Compactação restrita ao conteúdo das duas guias */
+  .settings.tab-settings {
+    padding: 9px 12px 8px;
+    gap: 8px;
+  }
+
+  .tab-settings .metric-group {
+    padding: 8px 9px;
+    gap: 6px;
+  }
+
+  .tab-settings .metric-group-title {
+    margin-bottom: 0;
+    line-height: 1.2;
+  }
+
+  .tab-settings .field-row {
+    gap: 7px;
+  }
+
+  .tab-settings .field {
+    gap: 3px;
+  }
+
+  .tab-settings .option-block {
+    margin-top: 5px;
+  }
+
+  .tab-settings .option-label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+
+  /* Configurações */
+  .settings {
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .metric-group {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-control);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .metric-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+  }
+
+  .field-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .field label {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .field input {
+    width: 100%;
+    min-width: 0;
+    height: 28px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    padding: 0 8px;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    font-weight: 600;
+    text-align: center;
+    transition: border-color 0.1s;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .field input:focus {
+    border-color: var(--brand);
+    border-width: 2px;
+    padding: 0 7px;
+  }
+
+  /* Botões Radio Customizados */
+  .radio-line {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .radio {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 12px;
+  }
+
+  .radio input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    margin: 0;
+    position: relative;
+    cursor: pointer;
+    background: var(--bg-surface);
+    display: grid;
+    place-content: center;
+    outline: none;
+    transition: border-color 0.1s;
+  }
+
+  .radio input[type="radio"]::before {
+    content: "";
+    width: 8px;
+    height: 5px;
+    border-left: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    transform: rotate(-45deg) scale(0);
+    transform-origin: center;
+    transition: 0.1s transform ease-in-out;
+  }
+
+  .radio input[type="radio"]:checked {
+    background: var(--brand);
+    border-color: var(--brand);
+    border-width: 1px;
+  }
+
+  .radio input[type="radio"]:checked::before {
+    transform: rotate(-45deg) scale(1);
+  }
+
+  .radio:hover input[type="radio"]:not(:checked) {
+    border-color: var(--text-primary);
+  }
+
+  /* Ações / Botões Refinados */
+  .check-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .check-line input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    flex: none;
+    margin: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    background: var(--bg-surface);
+    display: grid;
+    place-content: center;
+  }
+
+  .check-line input[type="checkbox"]::before {
+    content: "";
+    width: 8px;
+    height: 5px;
+    border-left: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+    transform: rotate(-45deg) scale(0);
+    transform-origin: center;
+  }
+
+  .check-line input[type="checkbox"]:checked {
+    background: var(--brand);
+    border-color: var(--brand);
+  }
+
+  .check-line input[type="checkbox"]:checked::before {
+    transform: rotate(-45deg) scale(1);
+  }
+
+  .actions {
+    margin: 0 12px 16px;
+    padding: 8px 9px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-control);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .actions-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    line-height: 1.2;
+  }
+
+  .action-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 28px;
+    gap: 8px;
+  }
+
+  .action-row > .btn-outline {
+    width: 100%;
+    min-height: 28px;
+    max-height: 28px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .action-spacer {
+    height: 28px;
+    min-width: 0;
+  }
+
+  button {
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 1;
+    transition: all 0.1s;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  button svg { fill: currentColor; flex: none; }
+  button svg.icon-stroke { fill: none; stroke: currentColor; }
+
+  /* Estilo Secundário (Outline Branco) */
+  .btn-outline {
+    height: 28px;
+    font-size: 11px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-control);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+  }
+  .btn-outline svg { width: 12px; height: 12px; }
+  .btn-outline:hover { background: var(--bg-surface-hover); border-color: var(--text-primary); }
+  .btn-outline:active { background: var(--bg-surface-pressed); }
+
+  .btn-outline.btn-disabled {
+    background: var(--bg-surface-hover);
+    color: var(--text-disabled);
+    border-color: var(--border-light);
+    cursor: not-allowed;
+  }
+
+  /* Estilo Hero (Coloridos e Maiores) */
+  .btn-hero {
+    height: 28px; /* Mesma altura dos demais botoes */
+    font-size: 12px;
+    border-radius: 4px; /* Levemente mais arredondado para suavizar o visual "bloco" */
+    border: 1px solid transparent;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08); /* Sombra suave dá efeito premium */
+  }
+  .btn-hero svg { width: 14px; height: 14px; }
+
+  .btn-primary { background: var(--brand); color: var(--text-on-brand); }
+  .btn-primary:hover { background: var(--brand-hover); }
+  .btn-primary:active { background: var(--brand-pressed); box-shadow: none; }
+
+  .btn-accent { background: var(--accent); color: var(--text-primary); }
+  .btn-accent:hover { background: var(--accent-hover); }
+  .btn-accent:active { background: var(--accent); box-shadow: none; }
+
+  .btn-hero.disabled,
+  .btn-hero.btn-disabled,
+  .btn-hero:disabled {
+    background: var(--bg-surface-hover);
+    color: var(--text-disabled);
+    border-color: var(--border-light);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  /* Desfazer permanece laranja mesmo quando não há ação a desfazer. */
+  #undoBtn,
+  #undoBtn.disabled,
+  #undoBtn.btn-disabled,
+  #undoBtn:disabled {
+    background: var(--accent);
+    color: var(--text-primary);
+    border-color: transparent;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    opacity: 1;
+  }
+
+  #undoBtn:hover {
+    background: var(--accent-hover);
+  }
+
+  #undoBtn:active {
+    background: var(--accent);
+    box-shadow: none;
+  }
+
+  #undoBtn.disabled,
+  #undoBtn.btn-disabled,
+  #undoBtn:disabled {
+    cursor: not-allowed;
+  }
+
+
+  /* Lado Direito */
+  .right-stack {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 120px;
+    gap: 16px;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .plan-section {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 6px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  /* Tabela de Dados */
+  .table-card {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Ações principais vinculadas diretamente ao Plano de Organização. */
+  .plan-actions-wrap {
+    flex: none;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .plan-actions {
+    flex: none;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    background: transparent;
+  }
+
+  .plan-actions button {
+    flex: 0 0 auto;
+    min-width: 104px;
+    padding: 0 12px;
+  }
+
+  .table-tools {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .table-tools strong {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* Subtitulos internos: separam os dois conjuntos sem criar novos cards */
+  .data-section-title {
+    flex: none;
+    min-height: 27px;
+    display: flex;
+    align-items: center;
+    padding: 5px 8px;
+    background: #faf9f8;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-light);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .data-section-title[hidden] {
+    display: none;
+  }
+
+  /* Resultado da análise: usa a mesma linguagem visual da tabela principal */
+  .sheet-plan {
+    display: block;
+    flex: none;
+    max-height: 190px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-surface);
+  }
+
+  .sheet-plan[hidden] {
+    display: none;
+  }
+
+  .sheet-plan-table {
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    text-align: left;
+  }
+
+  .sheet-plan-table thead th {
+    position: static;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  .sheet-plan-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .sheet-plan-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .sheet-plan-table tbody tr:hover {
+    background: var(--bg-surface-hover);
+  }
+
+  .sheet-plan-table tbody td {
+    padding: 7px 8px;
+    color: var(--text-primary);
+    font-weight: 400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sheet-plan-table .col-sheet { width: 24%; }
+  .sheet-plan-table .col-range { width: 46%; }
+  .sheet-plan-table .col-count { width: 30%; }
+
+  /* Titulos e valores ficam centralizados no mesmo eixo em cada coluna. */
+  .sheet-plan-table thead th,
+  .sheet-plan-table tbody td {
+    text-align: center;
+  }
+
+  .sheet-plan-table tbody tr.is-total td {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-weight: 400;
+    border-top: 1px solid var(--border-default);
+  }
+
+  .sheet-plan-table tbody tr.is-total td:first-child {
+    text-align: right;
+  }
+
+  .sheet-plan-table tbody tr.is-total td:last-child {
+    text-align: right;
+    padding-right: 16px;
+  }
+
+  /* Tabela de vistas: somente informacoes relevantes para o usuario. */
+  .views-table {
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    text-align: center;
+  }
+
+  .views-table .col-position { width: 18%; }
+  .views-table .col-view { width: 36%; }
+  .views-table .col-scale { width: 20%; }
+  .views-table .col-status { width: 26%; }
+
+  .views-table thead th,
+  .views-table tbody td {
+    padding: 7px 6px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .views-table thead th {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+  }
+
+  .views-table tbody td {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .table-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .table-container,
+  .sheet-plan,
+  .log-body,
+  .settings {
+    scrollbar-width: thin;
+    scrollbar-color: #8a8886 #f3f2f1;
+  }
+
+  .table-container::-webkit-scrollbar,
+  .sheet-plan::-webkit-scrollbar,
+  .log-body::-webkit-scrollbar,
+  .settings::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+
+  .table-container::-webkit-scrollbar-track,
+  .sheet-plan::-webkit-scrollbar-track,
+  .log-body::-webkit-scrollbar-track,
+  .settings::-webkit-scrollbar-track {
+    background: #f3f2f1;
+  }
+
+  .table-container::-webkit-scrollbar-thumb,
+  .sheet-plan::-webkit-scrollbar-thumb,
+  .log-body::-webkit-scrollbar-thumb,
+  .settings::-webkit-scrollbar-thumb {
+    min-height: 76px;
+    background: #8a8886;
+    border: 3px solid #f3f2f1;
+    border-radius: 999px;
+  }
+
+  .table-container::-webkit-scrollbar-thumb:hover,
+  .sheet-plan::-webkit-scrollbar-thumb:hover,
+  .log-body::-webkit-scrollbar-thumb:hover,
+  .settings::-webkit-scrollbar-thumb:hover {
+    background: #605e5c;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: left;
+    min-width: 400px;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-default);
+    z-index: 1;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  tbody tr:hover {
+    background: var(--bg-surface-hover);
+  }
+
+  tbody td {
+    padding: 8px 12px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  tbody tr.empty td { color: var(--text-disabled); }
+
+  /* Log do Sistema */
+  .log-card {
+    height: 120px;
+    min-height: 0;
+    margin-top: 0;
+  }
+
+  .log-head {
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .log-head strong {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .clean {
+    height: 24px;
+    padding: 0 8px;
+    font-size: 11px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--brand);
+    font-weight: 600;
+    flex: none;
+  }
+
+  .clean:hover { background: var(--bg-surface-hover); border-color: var(--border-light); }
+
+  .log-body {
+    flex: 1;
+    padding: 8px 16px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+    background: #faf9f8;
+  }
+
+  .time { color: var(--text-secondary); margin-right: 8px; }
+
+  /* Rodapé */
+  .footer {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: right;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+
+  /* Ajustes funcionais para janela Qt/WebChannel */
+  body {
+    margin: 0;
+    min-width: 760px;
+    min-height: 680px;
+    padding: 0;
+    display: block;
+    overflow: hidden;
+  }
+
+  .window {
+    width: 100vw;
+    height: 100vh;
+    min-width: 760px;
+    min-height: 680px;
+    border: 0;
+    border-radius: 0;
+    position: relative;
+  }
+
+  .titlebar {
+    position: relative;
+    z-index: 120;
+    cursor: move;
+  }
+
+  .window-controls button.win-btn {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    flex: none;
+  }
+
+  .pin,
+  .clean {
+    flex: none;
+  }
+
+  .shell {
+    height: calc(100vh - 32px);
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    overflow: hidden;
+  }
+
+  .workspace {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .workspace > .panel {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .settings {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 10px;
+  }
+
+  .actions {
+    flex: none;
+    padding-top: 8px;
+  }
+
+  .right-stack,
+  .table-card,
+  .table-container {
+    min-height: 0;
+  }
+
+  table {
+    width: 100%;
+    min-width: 740px;
+    table-layout: fixed;
+    font-size: 11.5px;
+  }
+
+  thead th,
+  tbody td {
+    padding: 7px 8px;
+  }
+
+  .log-card {
+    height: 120px;
+  }
+
+  .footer {
+    margin-top: 0;
+    line-height: 1;
+  }
+
+  .pin.off {
+    color: var(--text-disabled);
+    background: transparent;
+  }
+
+  .btn-outline.disabled,
+  .btn-outline.btn-disabled,
+  .btn-outline:disabled {
+    background: var(--bg-surface-hover);
+    color: var(--text-disabled);
+    border-color: var(--border-light);
+    cursor: not-allowed;
+  }
+
+  .alert {
+    display: none;
+    border: 1px solid var(--border-brand);
+    border-radius: var(--radius-control);
+    background: #eff6fc;
+    color: #004578;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .alert.show { display: none; }
+
+  .log-body {
+    white-space: pre-wrap;
+  }
+
+  .busy {
+    cursor: wait;
+    user-select: none;
+  }
+
+  .loading-overlay,
+  .dialog-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 32px;
+    bottom: 0;
+    z-index: 110;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    /* Sem escurecer/embacar a tela do programa: apenas o cartao central aparece,
+       captando cliques enquanto a operacao roda. */
+    background: transparent;
+  }
+
+  body.busy .loading-overlay,
+  .dialog-overlay.show {
+    display: flex;
+  }
+
+  .loading-card,
+  .dialog-card {
+    width: min(430px, calc(100vw - 56px));
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-control);
+    background: #fff;
+    box-shadow: var(--shadow-window);
+    padding: 18px;
+  }
+
+  .loading-text {
+    margin: 0 0 14px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .loading-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 11px;
+  }
+
+  .loading-percent {
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  .loading-bar {
+    position: relative;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--border-light);
+    border: 1px solid var(--border-default);
+  }
+
+  .loading-bar span {
+    position: relative;
+    display: block;
+    width: 0%;
+    height: 100%;
+    border-radius: 999px;
+    overflow: hidden;
+    background: linear-gradient(90deg, #006fc9 0%, var(--brand) 55%, #2b88d8 100%);
+    transition: width .30s cubic-bezier(.2,.8,.2,1);
+  }
+
+  /* Brilho contido somente na area azul carregada. */
+  .loading-bar span::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,0.38) 50%,
+      rgba(255,255,255,0) 100%);
+    transform: translateX(-100%);
+    animation: loading-shimmer 2.35s ease-in-out infinite;
+    opacity: .72;
+    pointer-events: none;
+  }
+
+  body:not(.busy) .loading-bar span::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  @keyframes loading-shimmer {
+    0%   { transform: translateX(-110%); }
+    100% { transform: translateX(110%); }
+  }
+
+  .dialog-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .dialog-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    color: #fff;
+    background: var(--brand);
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .dialog-icon.warn {
+    color: #ffffff;
+    background: var(--brand);
+  }
+
+  .dialog-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 650;
+    line-height: 1.25;
+  }
+
+  .dialog-message {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .dialog-button {
+    min-width: 102px;
+    height: 34px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-control);
+    background: #fff;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex: none;
+  }
+
+  .dialog-button.primary {
+    border-color: transparent;
+    color: #fff;
+    background: var(--brand);
+  }
+
+  .dialog-button.yellow {
+    border-color: transparent;
+    color: #ffffff;
+    background: var(--brand);
+  }
+
+  .dialog-button.yellow:hover {
+    background: var(--brand-hover);
+  }
+
+  .dialog-button.yellow:active {
+    background: var(--brand-pressed);
+  }
+
+  .resize-grip {
+    position: absolute;
+    z-index: 130;
+  }
+
+  .resize-grip-top,
+  .resize-grip-bottom {
+    left: 0;
+    right: 0;
+    height: 7px;
+    cursor: ns-resize;
+  }
+
+  .resize-grip-top { top: 0; }
+  .resize-grip-bottom { bottom: 0; }
+
+  .resize-grip-left,
+  .resize-grip-right {
+    top: 0;
+    bottom: 0;
+    width: 7px;
+    cursor: ew-resize;
+  }
+
+  .resize-grip-left { left: 0; }
+  .resize-grip-right { right: 0; }
+
+  .resize-grip-corner {
+    width: 12px;
+    height: 12px;
+    z-index: 131;
+  }
+
+  .resize-grip-top-left { top: 0; left: 0; cursor: nwse-resize; }
+  .resize-grip-top-right { top: 0; right: 0; cursor: nesw-resize; }
+  .resize-grip-bottom-left { bottom: 0; left: 0; cursor: nesw-resize; }
+  .resize-grip-bottom-right { bottom: 0; right: 0; cursor: nwse-resize; }
+
+</style>
+</head>
+<body>
+  <div class="window">
+    <!-- Barra de Título -->
+    <div class="titlebar">
+      <div class="titlebar-left">
+        <div class="appmark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5.5 4.5A1.5 1.5 0 0 1 7 3h18a1.5 1.5 0 0 1 1.5 1.5v23A1.5 1.5 0 0 1 25 29H7a1.5 1.5 0 0 1-1.5-1.5z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 9.2h21" stroke="currentColor" stroke-width="1.6"/><rect x="8" y="12.5" width="6.5" height="5" rx="1"/><rect x="17.5" y="12.5" width="6.5" height="5" rx="1"/><rect x="8" y="20" width="6.5" height="4" rx="1"/><rect x="17.5" y="20" width="6.5" height="4" rx="1"/></svg>
+        </div>
+        <span class="title-text">Organizador de Vista - Tekla</span>
+      </div>
+      <div class="window-controls">
+        <button class="win-btn" id="minBtn" type="button" tabindex="-1" aria-label="Minimizar">
+            <svg viewBox="0 0 10 10"><path d="M1 5h8" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>
+        </button>
+        <button class="win-btn" id="maxBtn" type="button" tabindex="-1" aria-label="Maximizar">
+            <svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+        </button>
+        <button class="win-btn close-btn" id="closeBtn" type="button" tabindex="-1" aria-label="Fechar">
+            <svg viewBox="0 0 10 10"><path d="M1 1l8 8m0-8L1 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Fundo cinza de divisão -->
+    <div class="shell">
+
+      <!-- Cabeçalho Principal (Card) -->
+      <header class="hero">
+        <div class="brand">
+          <div class="hero-icon" aria-hidden="true">
+             <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <rect x="4.5" y="3.5" width="23" height="25" rx="3" fill="#ffffff" stroke="var(--brand)" stroke-width="2"/>
+                <path d="M4.5 9.2h23" stroke="var(--brand)" stroke-width="1.6"/>
+                <rect x="7.3" y="5.6" width="6" height="1.8" rx="0.9" fill="var(--brand)"/>
+                <rect x="8" y="12.2" width="6.6" height="5.4" rx="1.2" fill="var(--brand)" fill-opacity="0.14" stroke="var(--brand)" stroke-width="1.5"/>
+                <rect x="17.4" y="12.2" width="6.6" height="5.4" rx="1.2" fill="var(--accent)" stroke="var(--accent)" stroke-width="1.5"/>
+                <rect x="8" y="20.4" width="6.6" height="4.2" rx="1.2" fill="var(--brand)" fill-opacity="0.14" stroke="var(--brand)" stroke-width="1.5"/>
+                <rect x="17.4" y="20.4" width="6.6" height="4.2" rx="1.2" fill="var(--brand)" fill-opacity="0.14" stroke="var(--brand)" stroke-width="1.5"/>
+             </svg>
+          </div>
+          <div>
+            <h1>Organizador de Vista</h1>
+            <span>Layout compacto para multidrawing do Tekla</span>
+          </div>
+        </div>
+        <!-- Pin -->
+        <button class="pin" id="pinBtn" type="button" title="Manter a frente" aria-label="Manter a frente">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+             <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="workspace">
+        <!-- Barra Lateral -->
+        <aside class="panel sidebar-panel">
+          <div class="sidebar-tabs" role="tablist" aria-label="Opções do organizador">
+            <button class="sidebar-tab active" id="parametersTab" type="button" role="tab"
+                    aria-selected="true" aria-controls="parametersPanel" data-tab="parametersPanel">
+              Parâmetros
+            </button>
+            <button class="sidebar-tab" id="configurationTab" type="button" role="tab"
+                    aria-selected="false" aria-controls="configurationPanel" data-tab="configurationPanel" tabindex="-1">
+              Configuração
+            </button>
+          </div>
+
+          <section class="tab-panel active" id="parametersPanel" role="tabpanel" aria-labelledby="parametersTab">
+            <div class="settings tab-settings">
+              <div class="metric-group">
+                <div class="metric-group-title">Lateral</div>
+                <div class="field-row">
+                  <div class="field"><label>Esquerda</label><input type="number" value="35" /></div>
+                  <div class="field"><label>Direita</label><input type="number" value="35" /></div>
+                </div>
+              </div>
+
+              <div class="metric-group">
+                <div class="metric-group-title">Vertical</div>
+                <div class="field-row">
+                  <div class="field"><label>Superior</label><input type="number" value="35" /></div>
+                  <div class="field"><label>Inferior</label><input type="number" value="35" /></div>
+                </div>
+              </div>
+
+              <div class="metric-group">
+                <div class="metric-group-title">Legenda</div>
+                <div class="field-row">
+                  <div class="field"><label>Largura</label><input type="number" value="185" /></div>
+                  <div class="field"><label>Altura</label><input type="number" value="70" /></div>
+                </div>
+              </div>
+
+              <div class="metric-group">
+                <div class="metric-group-title">Divisórias</div>
+                <div class="field-row">
+                  <div class="field"><label>Folga abaixo do rótulo (mm)</label><input type="number" min="0" step="1" value="8" /></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-panel" id="configurationPanel" role="tabpanel" aria-labelledby="configurationTab" hidden>
+            <div class="settings tab-settings">
+              <div class="metric-group">
+                <div class="metric-group-title">Espaçamento</div>
+                <div class="field-row">
+                  <div class="field"><label>Direção X</label><input type="number" value="35" /></div>
+                  <div class="field"><label>Direção Y</label><input type="number" value="35" /></div>
+                </div>
+              </div>
+
+              <div class="metric-group">
+                <div class="metric-group-title">Vistas &amp; Escala</div>
+                <div class="field-row">
+                  <div class="field"><label>Máx. vistas</label><input type="number" value="100" /></div>
+                  <div class="field"><label>Escala</label><input type="number" value="10" /></div>
+                </div>
+              </div>
+
+              <div class="metric-group">
+                <div class="metric-group-title">Ajuste</div>
+                <div class="field-row">
+                  <div class="field"><label>Altura cota</label><input type="number" value="120" /></div>
+                  <div class="field"><label>Dist. empilh.</label><input type="number" value="10" /></div>
+                </div>
+                <div class="option-block">
+                  <span class="option-label">Escala inteligente</span>
+                  <div class="radio-line">
+                    <label class="radio"><input type="radio" name="escala" value="all" checked> Todas</label>
+                    <label class="radio"><input type="radio" name="escala" value="missing"> Excedentes</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="metric-group">
+                <div class="metric-group-title">Atalho</div>
+                <label class="check-line">
+                  <input type="checkbox" id="disableHotkey">
+                  Desativar atalho
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <!-- Ações auxiliares da lateral esquerda -->
+          <div class="actions">
+            <div class="actions-title">Ferramenta</div>
+            <div class="action-row">
+              <button class="btn-outline" id="analyzeBtn" type="button">
+                <svg class="icon-stroke" viewBox="0 0 16 16" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2" width="8" height="7" rx="0.8"/><path d="M3.5 4.2h4M3.5 6.5h2.7"/><circle cx="10.3" cy="10.3" r="3"/><path d="m12.5 12.5 2 2"/></svg>
+                Analisar
+              </button>
+              <button class="btn-outline" id="capacityBtn" type="button">
+                <svg class="icon-stroke" viewBox="0 0 16 16" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2" width="13" height="11.5" rx="0.8"/><path d="M5.8 2v11.5M10.2 2v11.5M1.5 6h13M1.5 9.8h13"/><rect x="6.8" y="7" width="2.4" height="1.8" rx="0.3" fill="currentColor" stroke="none"/></svg>
+                Capacidade
+              </button>
+            </div>
+
+            <div class="action-row">
+              <button class="btn-outline" id="dimensionsBtn" type="button">
+                <svg class="icon-stroke" viewBox="0 0 16 16" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5v9M14 3.5v9"/><path d="M2 8h12M4.3 5.9 2 8l2.3 2.1M11.7 5.9 14 8l-2.3 2.1"/><rect x="6.7" y="6.7" width="2.6" height="2.6" rx="0.6" fill="currentColor" stroke="none"/></svg>
+                Ajustar cotas
+              </button>
+              <button class="btn-outline" id="radiusBtn" type="button">
+                <svg class="icon-stroke" viewBox="0 0 16 16" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5A8 8 0 0 1 11 13"/><path d="M3 13 8.66 7.34"/><path d="M6.4 8.16 8.66 7.34 7.84 9.6"/><circle cx="3" cy="13" r="1" fill="currentColor" stroke="none"/></svg>
+                Cotar raio
+              </button>
+            </div>
+
+            <div class="action-row">
+              <button class="btn-outline" id="divideBtn" type="button">
+                <svg class="icon-stroke" viewBox="0 0 16 16" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h12"/><path d="M2 8h12"/><path d="M2 12h12"/><path d="M4 4h1.8M8 4h1.8M12 4h2"/><path d="M2 8h2M6.2 8H8M10.4 8h3.6"/><path d="M3.2 12H5M7.4 12h1.8M11.6 12H14"/></svg>
+                Dividir
+              </button>
+              <button class="btn-outline" id="centerLinesBtn" type="button">
+                <svg class="icon-stroke" viewBox="0 0 16 16" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3.2"/><path d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3"/><circle cx="8" cy="8" r="0.8" fill="currentColor" stroke="none"/></svg>
+                L. Centro
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Área Principal de Dados -->
+        <section class="right-stack">
+
+          <div class="plan-section">
+          <!-- Tabela -->
+          <div class="panel table-card">
+            <div class="table-tools">
+              <strong>Plano de Organização</strong>
+            </div>
+            <div class="data-section-title" id="sheetPlanTitle" hidden>Distribuição por Folha</div>
+            <div class="sheet-plan" id="sheetPlan" hidden></div>
+            <div class="data-section-title">Vistas Analisadas</div>
+            <div class="table-container">
+                <table class="views-table">
+                  <colgroup>
+                    <col class="col-position" />
+                    <col class="col-view" />
+                    <col class="col-scale" />
+                    <col class="col-status" />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>Posição</th>
+                      <th>Vista</th>
+                      <th>Escala</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+          </div>
+
+          <div class="plan-actions-wrap">
+            <div class="plan-actions" aria-label="Ações do Plano de Organização">
+              <button class="btn-hero btn-primary" id="organizeBtn" type="button">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+                Organizar
+              </button>
+              <button class="btn-hero btn-primary" id="smartBtn" type="button">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+                Otimizar
+              </button>
+              <button class="btn-hero btn-accent disabled btn-disabled" id="undoBtn" type="button" disabled>
+                <svg class="icon-stroke" viewBox="0 0 16 16" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 8a4.9 4.9 0 1 1 1.5 3.55"/><path d="M3.2 4.9V8H6.3"/></svg>
+                Desfazer
+              </button>
+            </div>
+          </div>
+
+          </div>
+
+          <div class="alert" id="alertBox"></div>
+
+          <!-- Log -->
+          <div class="panel log-card">
+            <div class="log-head">
+              <strong>Registro de Atividades</strong>
+              <button class="clean" id="clearLogBtn" type="button">Limpar log</button>
+            </div>
+            <div class="log-body" id="logBox"></div>
+          </div>
+
+        </section>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="footer">Programa desenvolvido por Edflávio Calavort - 2026</div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+      <div class="loading-card">
+        <p class="loading-text" id="loadingText">Processando...</p>
+        <div class="loading-meta">
+          <span>Progresso</span>
+          <strong class="loading-percent" id="loadingPercent">0%</strong>
+        </div>
+        <div class="loading-bar"><span id="loadingFill"></span></div>
+      </div>
+    </div>
+
+    <div class="dialog-overlay" id="dialogOverlay" aria-hidden="true">
+      <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+        <div class="dialog-head">
+          <div class="dialog-icon" id="dialogIcon">i</div>
+          <h2 class="dialog-title" id="dialogTitle">Aviso</h2>
+        </div>
+        <p class="dialog-message" id="dialogMessage"></p>
+        <div class="dialog-actions" id="dialogActions"></div>
+      </div>
+    </div>
+
+    <div class="resize-grip resize-grip-edge resize-grip-top" data-edge="top"></div>
+    <div class="resize-grip resize-grip-edge resize-grip-bottom" data-edge="bottom"></div>
+    <div class="resize-grip resize-grip-edge resize-grip-left" data-edge="left"></div>
+    <div class="resize-grip resize-grip-edge resize-grip-right" data-edge="right"></div>
+    <div class="resize-grip resize-grip-corner resize-grip-top-left" data-edge="top-left"></div>
+    <div class="resize-grip resize-grip-corner resize-grip-top-right" data-edge="top-right"></div>
+    <div class="resize-grip resize-grip-corner resize-grip-bottom-left" data-edge="bottom-left"></div>
+    <div class="resize-grip resize-grip-corner resize-grip-bottom-right" data-edge="bottom-right"></div>
+
+  </div>
+
+
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+  <script>
+    const pinBtn = document.getElementById('pinBtn');
+    const logBox = document.getElementById('logBox');
+    const tableBody = document.getElementById('tableBody');
+    const sheetPlan = document.getElementById('sheetPlan');
+    const alertBox = document.getElementById('alertBox');
+    const dialogOverlay = document.getElementById('dialogOverlay');
+    const dialogTitle = document.getElementById('dialogTitle');
+    const dialogMessage = document.getElementById('dialogMessage');
+    const dialogActions = document.getElementById('dialogActions');
+    const dialogIcon = document.getElementById('dialogIcon');
+    const loadingText = document.getElementById('loadingText');
+    const loadingPercent = document.getElementById('loadingPercent');
+    const loadingFill = document.getElementById('loadingFill');
+    const sidebarTabs = Array.from(document.querySelectorAll('.sidebar-tab'));
+    const sidebarPanels = Array.from(document.querySelectorAll('.tab-panel'));
+    const disableHotkey = document.getElementById('disableHotkey');
+
+    function activateSidebarTab(panelId, focusTab = false){
+      sidebarTabs.forEach(tab => {
+        const active = tab.dataset.tab === panelId;
+        tab.classList.toggle('active', active);
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+        if(active && focusTab) tab.focus();
+      });
+      sidebarPanels.forEach(panel => {
+        const active = panel.id === panelId;
+        panel.classList.toggle('active', active);
+        panel.hidden = !active;
+      });
+    }
+
+    sidebarTabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => activateSidebarTab(tab.dataset.tab));
+      tab.addEventListener('keydown', event => {
+        let nextIndex = null;
+        if(event.key === 'ArrowRight') nextIndex = (index + 1) % sidebarTabs.length;
+        if(event.key === 'ArrowLeft') nextIndex = (index - 1 + sidebarTabs.length) % sidebarTabs.length;
+        if(event.key === 'Home') nextIndex = 0;
+        if(event.key === 'End') nextIndex = sidebarTabs.length - 1;
+        if(nextIndex === null) return;
+        event.preventDefault();
+        activateSidebarTab(sidebarTabs[nextIndex].dataset.tab, true);
+      });
+    });
+
+    const fieldOrder = [
+      'margin_left','margin_right','margin_top','margin_bottom',
+      'title_block_width','title_block_height','divider_label_gap_mm','spacing_x','spacing_y',
+      'max_details','auto_scale_limit','dimension_top_gap_mm','stack_spacing_y'
+    ];
+    const titlebar = document.querySelector('.titlebar');
+    let pyBridge = null;
+    let loadingTimer = null;
+    let loadingHideTimer = null;
+    let loadingValue = 0;
+
+    function parseBridgeResult(value){
+      if(value === undefined || value === null || value === '') return true;
+      if(typeof value !== 'string') return value;
+      try{
+        return JSON.parse(value);
+      }catch(err){
+        return value;
+      }
+    }
+
+    function callBridge(method, ...args){
+      return new Promise((resolve, reject) => {
+        if(!pyBridge || typeof pyBridge[method] !== 'function'){
+          reject(new Error('A interface com o programa ainda não está disponível.'));
+          return;
+        }
+        try{
+          pyBridge[method](...args, result => resolve(parseBridgeResult(result)));
+        }catch(err){
+          reject(err);
+        }
+      });
+    }
+
+    function payloadText(payload){
+      return JSON.stringify(payload || {});
+    }
+
+    function installQtBridgeShim(){
+      window.pywebview = {
+        api:{
+          get_state:() => callBridge('get_state'),
+          get_progress:() => callBridge('get_progress'),
+          clear_log:() => callBridge('clear_log'),
+          set_topmost:value => callBridge('set_topmost', !!value),
+          analyze:payload => callBridge('analyze', payloadText(payload)),
+          capacity:payload => callBridge('capacity', payloadText(payload)),
+          organize:payload => callBridge('organize', payloadText(payload)),
+          smart_organize:payload => callBridge('smart_organize', payloadText(payload)),
+          adjust_dimensions:payload => callBridge('adjust_dimensions', payloadText(payload)),
+          dimension_radius_cut:payload => callBridge('dimension_radius_cut', payloadText(payload)),
+          center_lines:payload => callBridge('center_lines', payloadText(payload)),
+          divide:payload => callBridge('divide', payloadText(payload)),
+          undo:payload => callBridge('undo', payloadText(payload)),
+          save_config:payload => callBridge('save_config', payloadText(payload)),
+          window_minimize:() => callBridge('minimizeWindow'),
+          window_maximize:() => callBridge('maximizeWindow'),
+          window_close:() => callBridge('closeWindow'),
+          window_start_drag:() => callBridge('startWindowDrag'),
+          window_start_resize:edge => callBridge('startWindowResize', edge)
+        }
+      };
+      window.dispatchEvent(new Event('pywebviewready'));
+    }
+
+    function initializeBridge(){
+      if(typeof QWebChannel === 'undefined' || typeof qt === 'undefined' || !qt.webChannelTransport){
+        return;
+      }
+      new QWebChannel(qt.webChannelTransport, channel => {
+        pyBridge = channel.objects.bridge;
+        installQtBridgeShim();
+      });
+    }
+
+    titlebar.addEventListener('mousedown', event => {
+      if(event.button !== 0 || event.target.closest('.window-controls,.win-actions,button,input,label')) return;
+      event.preventDefault();
+      pyBridge?.startWindowDrag();
+    });
+
+    titlebar.addEventListener('dblclick', event => {
+      if(event.target.closest('.window-controls,.win-actions,button,input,label')) return;
+      window.pywebview?.api?.window_maximize();
+    });
+
+    document.querySelectorAll('.resize-grip').forEach(grip => {
+      grip.addEventListener('mousedown', event => {
+        if(event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        pyBridge?.startWindowResize(grip.dataset.edge);
+      });
+    });
+
+    function inputs(){
+      return Array.from(document.querySelectorAll('.field input'));
+    }
+
+    function readForm(extra = {}){
+      const data = {};
+      inputs().forEach((input, index) => data[fieldOrder[index]] = input.value);
+      data.scale_apply_mode = document.querySelector('input[name="escala"]:checked')?.value || 'all';
+      data.dimension_hotkey_enabled = !disableHotkey.checked;
+      data.topmost = !pinBtn.classList.contains('off');
+      return Object.assign(data, extra || {});
+    }
+
+    function writeConfig(config){
+      if(!config) return;
+      const values = fieldOrder.map(key => config[key] ?? '');
+      inputs().forEach((input, index) => input.value = values[index]);
+      const mode = config.scale_apply_mode || 'all';
+      document.querySelectorAll('input[name="escala"]').forEach(radio => {
+        radio.checked = radio.value === mode;
+      });
+      disableHotkey.checked = config.dimension_hotkey_enabled === false;
+      pinBtn.classList.toggle('off', !config.topmost);
+    }
+
+    function renderSheetPlan(rows){
+      sheetPlan.innerHTML = '';
+      const sheetPlanTitle = document.getElementById('sheetPlanTitle');
+      if(!rows || !rows.length){
+        sheetPlan.hidden = true;
+        sheetPlanTitle.hidden = true;
+        sheetPlanTitle.textContent = 'Distribuição por Folha';
+        return;
+      }
+      const totalPieces = rows.reduce((sum, row) => sum + Number(row.count || 0), 0);
+      sheetPlanTitle.textContent = 'Distribuição por Folha';
+
+      const table = document.createElement('table');
+      table.className = 'sheet-plan-table';
+
+      const colgroup = document.createElement('colgroup');
+      ['col-sheet', 'col-range', 'col-count'].forEach(className => {
+        const col = document.createElement('col');
+        col.className = className;
+        colgroup.appendChild(col);
+      });
+      table.appendChild(colgroup);
+
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      ['Folha', 'Faixa de vistas', 'Quantidade'].forEach(label => {
+        const th = document.createElement('th');
+        th.textContent = label;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+
+        const sheet = document.createElement('td');
+        sheet.textContent = row.label || row.sheet || 'Folha';
+        sheet.title = sheet.textContent;
+
+        const range = document.createElement('td');
+        range.textContent = `${row.start || '-'} até ${row.end || '-'}`;
+        range.title = range.textContent;
+
+        const count = document.createElement('td');
+        count.textContent = `${row.count || 0} peça${Number(row.count) === 1 ? '' : 's'}`;
+        count.title = count.textContent;
+
+        tr.appendChild(sheet);
+        tr.appendChild(range);
+        tr.appendChild(count);
+        tbody.appendChild(tr);
+      });
+
+      const totalRow = document.createElement('tr');
+      totalRow.className = 'is-total';
+      const totalLabel = document.createElement('td');
+      totalLabel.colSpan = 2;
+      totalLabel.textContent = 'Total analisado';
+      const totalCount = document.createElement('td');
+      totalCount.textContent = `${totalPieces} peça${totalPieces === 1 ? '' : 's'}`;
+      totalRow.appendChild(totalLabel);
+      totalRow.appendChild(totalCount);
+      tbody.appendChild(totalRow);
+
+      table.appendChild(tbody);
+
+      sheetPlan.appendChild(table);
+      sheetPlan.hidden = false;
+      sheetPlanTitle.hidden = false;
+    }
+
+    function renderRows(items){
+      tableBody.innerHTML = '';
+      if(!items || !items.length){
+        return;
+      }
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        ['posicao','vista','escala','status'].forEach(key => {
+          const td = document.createElement('td');
+          td.textContent = item[key] ?? '';
+          td.title = item[key] ?? '';
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function renderLog(lines){
+      logBox.textContent = (lines || []).join('\n');
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function renderAlert(text){
+      alertBox.textContent = '';
+      alertBox.classList.remove('show');
+    }
+
+    function applyState(state){
+      if(!state) return;
+      writeConfig(state.config);
+      renderSheetPlan(state.sheet_plan);
+      renderRows(state.items);
+      renderLog(state.logs);
+      renderAlert(state.alert);
+      const undoBtn = document.getElementById('undoBtn');
+      undoBtn.classList.toggle('disabled', !state.can_undo);
+      undoBtn.classList.toggle('btn-disabled', !state.can_undo);
+      undoBtn.disabled = !state.can_undo;
+    }
+
+    function applyProgress(data){
+      if(!data || typeof data.value !== 'number') return;
+      const target = Math.min(99, Math.max(0, data.value));
+      if(target >= loadingValue) setLoadingProgress(target, data.text || undefined);
+      else if(data.text) loadingText.textContent = data.text;
+    }
+
+    function loadingLabel(method){
+      const labels = {
+        analyze:'Analisando desenho...',
+        capacity:'Calculando capacidade...',
+        organize:'Organizando vistas...',
+        smart_organize:'Otimizando layout...',
+        adjust_dimensions:'Ajustando cotas...',
+        dimension_radius_cut:'Cotando raio...',
+        center_lines:'Criando linhas de centro...',
+        divide:'Criando divisórias...',
+        undo:'Restaurando vistas...'
+      };
+      return labels[method] || 'Processando...';
+    }
+
+    function setLoadingProgress(value, text){
+      loadingValue = Math.max(0, Math.min(100, Math.round(value)));
+      if(text) loadingText.textContent = text;
+      loadingPercent.textContent = loadingValue + '%';
+      loadingFill.style.width = loadingValue + '%';
+    }
+
+    // Consulta o progresso REAL reportado pelo backend durante a operacao.
+    // O backend informa a fracao de trabalho ja concluida (0..99); a barra so
+    // avanca (monotonica) e nunca chega a 100 antes de a operacao terminar.
+    async function pollProgress(){
+      try{
+        if(!window.pywebview?.api?.get_progress) return;
+        const data = await window.pywebview.api.get_progress();
+        applyProgress(data);
+      }catch(err){ /* silencioso: a barra apenas segura o valor atual */ }
+    }
+
+    function setBusy(isBusy, text = 'Processando...'){
+      if(loadingHideTimer){
+        clearTimeout(loadingHideTimer);
+        loadingHideTimer = null;
+      }
+      if(loadingTimer){
+        clearInterval(loadingTimer);
+        loadingTimer = null;
+      }
+      if(isBusy){
+        document.body.classList.add('busy');
+        setLoadingProgress(0, text);
+        loadingTimer = setInterval(pollProgress, 350);
+        return;
+      }
+      setLoadingProgress(100, 'Concluído.');
+      loadingHideTimer = setTimeout(() => {
+        document.body.classList.remove('busy');
+        setLoadingProgress(0, 'Processando...');
+        loadingHideTimer = null;
+      }, 240);
+    }
+
+    function showDialog(options = {}){
+      return new Promise(resolve => {
+        const buttons = options.buttons || [{label:'OK', value:true, className:'primary'}];
+        dialogTitle.textContent = options.title || 'Aviso';
+        dialogMessage.textContent = options.message || '';
+        dialogIcon.textContent = options.iconText || (options.kind === 'warning' ? '!' : 'i');
+        dialogIcon.classList.toggle('warn', options.kind === 'warning');
+        dialogActions.innerHTML = '';
+        buttons.forEach(buttonInfo => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'dialog-button ' + (buttonInfo.className || '');
+          button.textContent = buttonInfo.label;
+          button.addEventListener('click', () => {
+            dialogOverlay.classList.remove('show');
+            dialogOverlay.setAttribute('aria-hidden', 'true');
+            resolve(buttonInfo.value);
+          });
+          dialogActions.appendChild(button);
+        });
+        dialogOverlay.classList.add('show');
+        dialogOverlay.setAttribute('aria-hidden', 'false');
+        const primary = dialogActions.querySelector('.primary,.yellow') || dialogActions.querySelector('button');
+        if(primary) primary.focus();
+      });
+    }
+
+    function showMessage(message, title = 'Aviso', kind = 'info'){
+      if(!message) return Promise.resolve(true);
+      return showDialog({
+        title,
+        message,
+        kind,
+        buttons:[{label:'OK', value:true, className:'primary'}]
+      });
+    }
+
+    function showConfirm(message, title = 'Confirmar', confirmLabel = 'Continuar'){
+      return showDialog({
+        title,
+        message,
+        kind:'warning',
+        buttons:[
+          {label:'Cancelar', value:false, className:''},
+          {label:confirmLabel, value:true, className:'yellow'}
+        ]
+      });
+    }
+
+    async function handleConfirmRequest(method, options, request){
+      const ok = await showDialog({
+        title:request.title || 'Confirmar',
+        message:request.message || '',
+        kind:'warning',
+        buttons:request.buttons || [
+          {label:'Cancelar', value:false, className:''},
+          {label:'Continuar', value:true, className:'yellow'}
+        ]
+      });
+      if(!ok) return;
+      await callApi(method, Object.assign({}, options, {confirm:null}), request.payload || {});
+    }
+
+    async function callApi(method, options = {}, extraPayload = {}){
+      if(!window.pywebview?.api) return;
+      if(options.confirm && !(await showConfirm(options.confirm, options.confirmTitle || 'Confirmar', options.confirmLabel || 'Continuar'))) return;
+      setBusy(true, options.loadingText || loadingLabel(method));
+      try{
+        const result = await window.pywebview.api[method](readForm(extraPayload));
+        applyState(result);
+        setBusy(false);
+        if(result?.confirm_request){
+          await handleConfirmRequest(method, options, result.confirm_request);
+          return;
+        }
+        // Retornos normais da API ficam no plano/log da interface.
+      }catch(err){
+        setBusy(false);
+        await showMessage(String(err), 'Erro', 'warning');
+      }finally{
+        setBusy(false);
+      }
+    }
+
+    document.getElementById('analyzeBtn').addEventListener('click', () => callApi('analyze'));
+    document.getElementById('capacityBtn').addEventListener('click', () => callApi('capacity', {silentSuccess:true}));
+    document.getElementById('organizeBtn').addEventListener('click', () => callApi('organize', {confirm:'Mover as vistas planejadas no multidrawing ativo?'}));
+    document.getElementById('smartBtn').addEventListener('click', () => callApi('smart_organize', {confirm:'Aplicar a otimização no multidrawing ativo?'}));
+    document.getElementById('dimensionsBtn').addEventListener('click', () => callApi('adjust_dimensions'));
+    document.getElementById('radiusBtn').addEventListener('click', () => callApi('dimension_radius_cut'));
+    document.getElementById('centerLinesBtn').addEventListener('click', () => callApi('center_lines'));
+    document.getElementById('divideBtn').addEventListener('click', () => callApi('divide'));
+    document.getElementById('undoBtn').addEventListener('click', () => callApi('undo', {confirm:'Desfazer a última alteração desta sessão?'}));
+    document.getElementById('clearLogBtn').addEventListener('click', async () => applyState(await window.pywebview.api.clear_log()));
+    inputs().forEach(input => {
+      input.addEventListener('keydown', async event => {
+        if(event.key !== 'Enter') return;
+        event.preventDefault();
+        event.currentTarget.blur();
+        if(window.pywebview?.api?.save_config){
+          applyState(await window.pywebview.api.save_config(readForm()));
+        }
+      });
+    });
+    disableHotkey.addEventListener('change', async () => {
+      if(window.pywebview?.api?.save_config){
+        applyState(await window.pywebview.api.save_config(readForm()));
+      }
+    });
+    document.getElementById('minBtn').addEventListener('click', () => window.pywebview.api.window_minimize());
+    document.getElementById('maxBtn').addEventListener('click', () => window.pywebview.api.window_maximize());
+    document.getElementById('closeBtn').addEventListener('click', () => window.pywebview.api.window_close());
+
+    pinBtn.addEventListener('click', async () => {
+      pinBtn.classList.toggle('off');
+      applyState(await window.pywebview.api.set_topmost(!pinBtn.classList.contains('off')));
+    });
+
+    window.addEventListener('pywebviewready', async () => {
+      applyState(await window.pywebview.api.get_state());
+    });
+
+    initializeBridge();
+  </script>
+</body>
+</html>
