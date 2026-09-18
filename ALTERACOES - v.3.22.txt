@@ -1,7 +1,0 @@
-v.3.22
-- Corrigida a superestimativa da Capacidade.
-- A medição dos croquis agora abre o desenho para obter dimensões reais, evitando frames incompletos do cache do Document Manager.
-- A capacidade considera somente a sequência contínua até a primeira peça que não cabe; peças menores posteriores não inflam mais o total.
-- Quando existem vistas reais no multidrawing, o programa calibra automaticamente a diferença entre o croqui e o DrawingLink inserido e reutiliza essa calibração nas folhas seguintes.
-- O plano de capacidade antigo é limpo após uma nova análise, evitando exibir números antigos depois da organização real.
-- Interface aprovada preservada, sem novas caixas ou áreas visuais.

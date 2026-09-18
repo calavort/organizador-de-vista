@@ -1,6 +1,0 @@
-v.3.23
-- Dividir: corrigida a divisoria que cortava as pecas quando uma peca da fileira de baixo era mais alta que as vizinhas (ex.: PECA 42.2, 43.2, 44.2, cujo detalhe de angulo sobe acima do rotulo).
-- Agora a divisoria e posicionada ACIMA da peca mais alta da fileira de baixo, medindo o topo do conteudo visivel de cada vista (desenho + cotas + detalhe), em vez de ser presa apenas ao rotulo da fileira de cima. Assim ela nunca atravessa as pecas.
-- A "Folga acima da peca" (antiga "Distancia dos rotulos") passou a controlar diretamente a cota "A": a distancia entre a linha de cima e a peca de baixo. Aumentar o valor afasta a linha da peca; diminuir aproxima.
-- Salvaguarda: se a fileira de baixo for tao alta que nao sobra espaco, a linha mantem o afastamento minimo das pecas e ainda fica abaixo do rotulo da fileira de cima.
-- Interface: rotulo do campo em Divisorias renomeado para "Folga acima da peca (mm)" para refletir o novo comportamento.

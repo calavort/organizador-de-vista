@@ -29,7 +29,7 @@ MAX_EXPANDED = 160 * 1024 * 1024
 MAX_FILES = 200
 MAX_DEPTH = 4
 MAX_NAME = 180
-LAUNCHER_DEFAULT = "Organizador de Vista.py"
+LAUNCHER_DEFAULT = "Organizador de Vista.pyw"
 _RESERVED_NAMES = frozenset(
     {"CON", "PRN", "AUX", "NUL"}
     | {f"COM{n}" for n in range(1, 10)}
@@ -43,10 +43,9 @@ _SEGMENT = re.compile(r"[A-Za-z0-9_][A-Za-z0-9 ._-]*")
 # "tekla-root.txt" fica de fora de proposito: e onde o usuario escreve a pasta
 # da versao dele do Tekla, e uma atualizacao nao pode apagar isso.
 APP_FILES = (
-    "Organizador de Vista.py", "versao.json", "requirements.txt",
+    "Organizador de Vista.pyw", "versao.json", "requirements.txt",
     "interface_organizador_tekla.html",
-    "Abrir Organizador de Vista.bat", "Instalar dependencias.bat",
-    "Adicionar ao Menu Iniciar.bat",
+    "Instalar dependencias.bat", "Adicionar ao Menu Iniciar.bat",
     "atualizacao/atualizador.py", "atualizacao/atualizador_ui.py",
     "ferramentas/publicar_release.py",
     "interface/organizador_de_vista.ico",
