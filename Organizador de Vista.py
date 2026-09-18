@@ -39,6 +39,7 @@ APP_NAME = "Organizador de Vista - Tekla"
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "config.json"
 HTML_UI_PATH = BASE_DIR / "interface_organizador_tekla.html"
+ICON_PATH = BASE_DIR / "interface" / "organizador_de_vista.ico"
 REPORT_DIR = BASE_DIR / "relatorios"
 REPORT_DIR.mkdir(exist_ok=True)
 DIMENSION_TOP_GAP_MM = 120.0
@@ -7136,7 +7137,7 @@ def install_windows_native_frame_patch():
 
 def run_html_app():
     from PySide6.QtCore import QEventLoop, QObject, QTimer, QUrl, Qt, Signal, Slot
-    from PySide6.QtGui import QColor
+    from PySide6.QtGui import QColor, QIcon
     from PySide6.QtWebChannel import QWebChannel
     from PySide6.QtWebEngineCore import QWebEngineSettings
     from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -7148,6 +7149,7 @@ def run_html_app():
         def __init__(self, controller):
             super().__init__()
             self.controller = controller
+            self.updates = None  # a janela preenche ao abrir
             self.controller.progress_emit_cb = self._emit_progress
             # Todas as chamadas Tekla rodam em uma unica thread dedicada, fora da
             # thread do Qt. Assim a janela continua pintando (barra de carregamento
@@ -7302,6 +7304,34 @@ def run_html_app():
         def startWindowResize(self, edge):
             return bool(self.controller.window_start_resize(edge))
 
+        # ------------------------------------------------------- atualizacao
+        # A janela guarda o UpdateController aqui ao abrir. Sem atualizador
+        # configurado (versao.json ausente ou invalido) os botoes respondem
+        # False e a guia mostra o motivo.
+        @Slot(result=bool)
+        def updatesReady(self):
+            if self.updates is None:
+                return False
+            self.updates.ui_ready()
+            return True
+
+        @Slot(result=bool)
+        def checkUpdate(self):
+            if self.updates is None:
+                return False
+            self.updates.check(True)
+            return True
+
+        @Slot(result=bool)
+        def installUpdate(self):
+            if self.updates is None:
+                return False
+            if self.updates.archive:
+                self.updates.confirm_restart()
+            else:
+                self.updates.offer_install()
+            return True
+
     class OrganizerMainWindow(QMainWindow):
         def __init__(self):
             super().__init__()
@@ -7312,6 +7342,8 @@ def run_html_app():
             self._dimension_hotkey_ids = []
             self._dimension_hotkey_busy = False
             self.setWindowTitle(APP_NAME)
+            if ICON_PATH.is_file():
+                self.setWindowIcon(QIcon(str(ICON_PATH)))
             if not IS_WINDOWS:
                 self.setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
             if bool(self.controller.cfg.topmost):
@@ -7336,6 +7368,18 @@ def run_html_app():
             self.channel.registerObject("bridge", self.bridge)
             self.web.page().setWebChannel(self.channel)
             self.setCentralWidget(self.web)
+
+            # Atualizacao pelo GitHub Releases, o mesmo sistema do Super Captura.
+            # Se o versao.json nao estiver configurado, o programa abre do mesmo
+            # jeito: so a guia Atualizacao fica sem funcao.
+            self.updates = None
+            try:
+                from atualizacao.atualizador_ui import UpdateController
+                self.updates = UpdateController(self, BASE_DIR)
+            except Exception as ex:
+                self.controller.log("Atualizacao indisponivel: " + str(ex))
+            self.bridge.updates = self.updates
+
             self.web.setUrl(QUrl.fromLocalFile(str(HTML_UI_PATH)))
 
         def showEvent(self, event):

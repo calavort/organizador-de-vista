@@ -364,6 +364,35 @@
     margin-bottom: 2px;
   }
 
+  /* Guia Atualização */
+  .update-line {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .update-status {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    min-height: 2.9em;
+    word-break: break-word;
+  }
+
+  .update-note {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .update-credit {
+    margin-top: auto;
+    padding-top: 10px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
   .field-row {
     display: flex;
     gap: 8px;
@@ -1400,6 +1429,10 @@
                     aria-selected="false" aria-controls="configurationPanel" data-tab="configurationPanel" tabindex="-1">
               Configuração
             </button>
+            <button class="sidebar-tab" id="updateTab" type="button" role="tab"
+                    aria-selected="false" aria-controls="updatePanel" data-tab="updatePanel" tabindex="-1">
+              Atualização
+            </button>
           </div>
 
           <section class="tab-panel active" id="parametersPanel" role="tabpanel" aria-labelledby="parametersTab">
@@ -1480,6 +1513,33 @@
             </div>
           </section>
 
+          <section class="tab-panel" id="updatePanel" role="tabpanel" aria-labelledby="updateTab" hidden>
+            <div class="settings tab-settings">
+              <div class="metric-group">
+                <div class="metric-group-title">Atualização do programa</div>
+                <div class="update-line" id="update-version">Versão —</div>
+                <div class="update-status" id="update-status">Aguardando verificação.</div>
+              </div>
+
+              <div class="action-row">
+                <button class="btn-outline" id="btn-check-update" type="button">
+                  <svg class="icon-stroke" viewBox="0 0 16 16" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.6 2.4v2.9h-2.9"/></svg>
+                  Verificar
+                </button>
+                <button class="btn-outline" id="btn-install-update" type="button" disabled>
+                  <svg class="icon-stroke" viewBox="0 0 16 16" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v7"/><path d="M5.2 6.8 8 9.6l2.8-2.8"/><path d="M3 12.2h10"/></svg>
+                  Atualizar
+                </button>
+              </div>
+
+              <div class="update-note">
+                O programa procura versões novas sozinho ao abrir. Seus relatórios, o
+                <strong>config.json</strong> e o <strong>tekla-root.txt</strong> não são tocados.
+              </div>
+              <div class="update-credit">Programa desenvolvido por Edflávio Calavort — 2026</div>
+            </div>
+          </section>
+
           <!-- Ações auxiliares da lateral esquerda -->
           <div class="actions">
             <div class="actions-title">Ferramenta</div>
@@ -1516,6 +1576,7 @@
               </button>
             </div>
           </div>
+
         </aside>
 
         <!-- Área Principal de Dados -->
@@ -1744,6 +1805,40 @@
       new QWebChannel(qt.webChannelTransport, channel => {
         pyBridge = channel.objects.bridge;
         installQtBridgeShim();
+        initializeUpdates();
+      });
+    }
+
+    /* ---------- Guia Atualização (GitHub Releases) ---------- */
+    /* O Python chama esta função para desenhar o estado; ela é global de
+       propósito, é o único ponto de entrada que o atualizador usa. */
+    function updateReleaseState(state){
+      const versao = document.getElementById('update-version');
+      const situacao = document.getElementById('update-status');
+      const verificar = document.getElementById('btn-check-update');
+      const instalar = document.getElementById('btn-install-update');
+      if(!versao || !situacao) return;
+      versao.textContent = `Versão ${state.version}`;
+      situacao.textContent = state.message;
+      situacao.title = state.message;
+      if(verificar) verificar.disabled = !!state.busy;
+      if(instalar) instalar.disabled = !!state.busy || !state.available;
+    }
+
+    function initializeUpdates(){
+      const verificar = document.getElementById('btn-check-update');
+      const instalar = document.getElementById('btn-install-update');
+      const situacao = document.getElementById('update-status');
+      if(verificar) verificar.addEventListener('click', () => pyBridge?.checkUpdate());
+      if(instalar) instalar.addEventListener('click', () => pyBridge?.installUpdate());
+      /* updatesReady devolve false quando o versao.json não está configurado:
+         aí os botões não têm o que fazer e a guia explica isso. */
+      pyBridge?.updatesReady(ok => {
+        if(ok === false){
+          if(situacao) situacao.textContent = 'Atualização não configurada neste programa.';
+          if(verificar) verificar.disabled = true;
+          if(instalar) instalar.disabled = true;
+        }
       });
     }
 
