@@ -1,5 +1,10 @@
 # Atualizações do Organizador de Vista
 
+## v3.25.1
+
+- O instalador agora espera o programa fechar de verdade antes de trocar os
+  arquivos, e nenhuma segunda janela consegue abrir no meio da instalação.
+
 ## v3.25.0
 
 - **Atualização automática pelo GitHub.** É o mesmo sistema do Super Captura: o

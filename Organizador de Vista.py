@@ -7495,9 +7495,35 @@ def run_html_app():
             return super().nativeEvent(event_type, message)
 
     app = QApplication.instance() or QApplication(sys.argv)
-    window = OrganizerMainWindow()
-    window.show()
-    sys.exit(app.exec())
+    app.setApplicationName(APP_NAME)
+    app.setOrganizationName("Edflávio Calavort")
+    if ICON_PATH.is_file():
+        app.setWindowIcon(QIcon(str(ICON_PATH)))
+
+    # Registro desta janela para o instalador. Sem ele o instalador trocaria os
+    # arquivos com o programa ainda aberto e abriria uma segunda janela.
+    instance = None
+    try:
+        from atualizacao.atualizador import AppInstance
+        instance = AppInstance(BASE_DIR)
+        if not instance.acquire():
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.information(None, APP_NAME,
+                                    "Uma atualizacao esta em andamento. Aguarde a conclusao para abrir o programa.")
+            instance.release()
+            return
+    except Exception:
+        instance = None  # sem atualizador configurado, o programa abre igual
+
+    try:
+        window = OrganizerMainWindow()
+        window.app_instance = instance
+        window.show()
+        resultado = app.exec()
+    finally:
+        if instance is not None:
+            instance.release()
+    sys.exit(resultado)
 
 
 if __name__ == "__main__":

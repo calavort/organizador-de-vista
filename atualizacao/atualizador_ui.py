@@ -176,6 +176,9 @@ class UpdateController(QObject):
 
     @Slot(str)
     def _failed(self, message):
+        instancia = getattr(self.window, "app_instance", None)
+        if instancia:
+            instancia.cancel_update()
         self.busy = False
         self.installing = False
         self.window.setEnabled(True)
@@ -218,6 +221,13 @@ class UpdateController(QObject):
         # Mudanca em desenvolvimento se publica, nao se troca por um pacote antigo.
         if (self.root / ".git").exists():
             self._status("Pasta de desenvolvimento. Teste a instalacao na copia extraida do pacote ZIP.")
+            self._log(self.message)
+            return
+        # Segura a vaga: nenhuma outra janela pode abrir enquanto o instalador
+        # troca os arquivos, e o instalador espera esta aqui fechar.
+        instancia = getattr(self.window, "app_instance", None)
+        if instancia and not instancia.reserve_update():
+            self._status("Feche as outras janelas do Organizador de Vista e tente instalar novamente.")
             self._log(self.message)
             return
         self.installing = True
