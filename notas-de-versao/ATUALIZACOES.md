@@ -1,5 +1,12 @@
 # Atualizações do Organizador de Vista
 
+## v3.25.3
+
+- **Tabela do Plano de Organização com as colunas redistribuídas.** Posição,
+  Vista e Escala sobravam espaço; Status faltava, e "Planejada - grupo
+  empilhado" aparecia cortado. O espaço que sobrava foi para onde faltava: o
+  texto aparece inteiro, mesmo com a janela no tamanho mínimo.
+
 ## v3.25.2
 
 - Um único atalho para abrir: o `Abrir Organizador de Vista.bat`, agora sem a
